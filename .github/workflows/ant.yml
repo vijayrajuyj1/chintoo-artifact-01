@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to EC2 via AWS SSM
-        uses: appleboy/ ssh-actions@v0.1.0
+        uses: appleboy/ssh-action@v0.1.10
         with:
           hosts: ${{secrets.EC2_HOST}}
           username: ubuntu
