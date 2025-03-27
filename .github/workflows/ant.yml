@@ -25,9 +25,11 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew clean build
+
       - name: Install AWS CLI
         run: |
           sudo apt update && sudo snap install aws-cli --classic 
+
       - name: Upload to S3
         run: |
           aws s3 cp build/libs/*.jar s3://vijay-980-oi/app.jar
@@ -43,14 +45,23 @@ jobs:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{secrets.EC2_HOST}}
+          host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
-            aws s3 cp s3://vijay-980-oi/app.jar /home/ubuntu/app.jar
-            java -jar /home/ubuntu/app.jar
+            # Stop any existing Java application
+            sudo pkill -f 'java -jar' || true
             
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-east-1"
+            # Download the latest JAR from S3
+            aws s3 cp s3://vijay-980-oi/app.jar /home/ubuntu/app.jar
+
+            # Ensure the JAR has execute permissions
+            chmod +x /home/ubuntu/app.jar
+
+            # Start the application in the background with logging
+            nohup java -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
+
+            # Verify the application is running
+            sleep 5
+            pgrep -f 'java -jar' && echo "Application is running" || echo "Application failed to start"
+
