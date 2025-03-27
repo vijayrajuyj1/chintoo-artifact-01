@@ -2,7 +2,7 @@
 
 **steps**
 
-1) Create Infrastructure using Terraform (vpc, subnets, internet gateway, subnenet association,  security groups , s3 , ec2 instances )
+1) Create Infrastructure using Terraform **[main.tf]**  in the code (vpc, subnets, internet gateway, subnenet association,  security groups , s3 , ec2 instances )
 
 2) Write .github/workflows/ant.yaml cicd fior automation in that we have some stages
 
