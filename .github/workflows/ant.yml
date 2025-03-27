@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.TOKEN }}
+          token: ${{secrets.TOKEN}}
 
       - name: Set Up JDK 8
         uses: actions/setup-java@v3
@@ -49,41 +49,14 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
-            # Configure AWS credentials manually
-            mkdir -p ~/.aws
-            echo "[default]" > ~/.aws/credentials
-            echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
-            echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
-            echo "[default]" > ~/.aws/config
-            echo "region=us-east-1" >> ~/.aws/config
+            # Stop any running Java application
+            sudo pkill -f 'java -jar' || true
 
-            export AWS_SHARED_CREDENTIALS_FILE=~/.aws/credentials
-            export AWS_CONFIG_FILE=~/.aws/config
+            # Download the latest JAR file from S3
+            aws s3 cp s3://vijay-980-oi/app.jar /home/ubuntu/app.jar
 
-            # Verify AWS authentication
-            aws sts get-caller-identity || { echo "❌ AWS authentication failed"; exit 1; }
-
-            # Download JAR from S3
-            aws s3 cp s3://vijay-980-oi/app.jar /home/ubuntu/app.jar || { echo "❌ Failed to download JAR"; exit 1; }
-
-            # Ensure correct permissions
+            # Ensure the JAR has execute permissions
             chmod +x /home/ubuntu/app.jar
 
-            # Stop existing Java process (if running)
-            pkill -f 'app.jar' || true
-
-            echo "🚀 Starting the application..."
+            # Start the application in the background
             nohup java -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
-
-            # Wait for app to start
-            sleep 5
-
-            # Check if application is running
-            if pgrep -f 'app.jar' > /dev/null
-            then
-                echo "✅ Application started successfully."
-            else
-                echo "❌ Application failed to start. Check logs."
-                cat /home/ubuntu/app.log
-                exit 1
-            fi
