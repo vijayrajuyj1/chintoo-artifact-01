@@ -58,7 +58,7 @@ jobs:
  
             if ! command -v aws &> /dev/null
             then
-                sudo apt update && sudo apt install aws-cli --classic
+                sudo apt update && sudo snap install aws-cli --classic
             fi
 
             # Download JAR from S3
