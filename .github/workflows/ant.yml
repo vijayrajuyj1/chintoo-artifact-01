@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.TOKEN }}
+          token: ${{secrets.TOKEN}}
 
       - name: Set Up JDK 8
         uses: actions/setup-java@v3
@@ -25,11 +25,9 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew clean build
-
       - name: Install AWS CLI
         run: |
           sudo apt update && sudo snap install aws-cli --classic 
-
       - name: Upload to S3
         run: |
           aws s3 cp build/libs/*.jar s3://vijay-980-oi/app.jar
@@ -45,43 +43,13 @@ jobs:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{secrets.EC2_HOST}}
           username: ubuntu
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
-            # Install Java if not installed
-            if ! command -v java &> /dev/null
-            then
-                sudo apt update && sudo apt install openjdk-8-jdk -y
-                
-            fi
- 
-            if ! command -v aws &> /dev/null
-            then
-                sudo apt update && sudo snap install aws-cli --classic
-            fi
-
-            # Download JAR from S3
             aws s3 cp s3://vijay-980-oi/app.jar /home/ubuntu/app.jar
-
-            # Ensure correct permissions
-            chmod +x /home/ubuntu/app.jar
-
-            # Stop existing Java process (if running)
-            pkill -f 'java -jar' || true
-
-            # Start the application
             nohup java -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
-
-            # Wait for app to start
-            sleep 5
-
-            # Check if application is running
-            if pgrep -f 'java -jar' > /dev/null
-            then
-                echo "✅ Application started successfully."
-            else
-                echo "❌ Application failed to start. Check logs."
-                cat /home/ubuntu/app.log
-                exit 1
-            fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
