@@ -55,6 +55,11 @@ jobs:
                 sudo apt update && sudo apt install openjdk-8-jdk -y
                 
             fi
+ 
+            if ! command -v aws &> /dev/null
+            then
+                sudo apt update && sudo apt install aws-cli --classic
+            fi
 
             # Download JAR from S3
             aws s3 cp s3://vijay-980-oi/app.jar /home/ubuntu/app.jar
