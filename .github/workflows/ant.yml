@@ -52,7 +52,8 @@ jobs:
             # Install Java if not installed
             if ! command -v java &> /dev/null
             then
-                sudo apt update && sudo apt install openjdk-8-jre
+                sudo apt update && sudo apt install openjdk-8-jdk -y
+                
             fi
 
             # Download JAR from S3
