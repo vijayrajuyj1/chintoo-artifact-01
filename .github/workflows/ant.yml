@@ -1,24 +1,57 @@
-# This workflow will build a Java project with Ant
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-ant
-
-name: Java CI
+name: Deploy Java App to AWS
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches:
+      - master
 
 jobs:
   build:
-
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: java
-      uses: battila7/jdk-via-jabba@v1
-      with:
-        jdk: zulu@1.8.152
-    - run: java -version
-        
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set Up JDK 8
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'corretto'
+
+      - name: Build JAR with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt update && sudo snap install aws-cli --classic 
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp build/libs/*.jar s3://vijay-980-oi/app.jar
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install AWS CLI
+        run: |
+          sudo apt update && sudo snap install aws-cli --classic 
+
+      - name: Deploy to EC2 via AWS SSM
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets Key=instanceIds,Values=i-08fbd9469c8cbd6c7 \
+            --parameters 'commands=["aws s3 cp s3://vijay-980-oi/app.jar /home/ubuntu/app.jar", "nohup java -jar /home/ubuntu/app.jar &"]'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
