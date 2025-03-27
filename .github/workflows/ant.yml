@@ -23,12 +23,12 @@ jobs:
 
       - name: Build JAR with Gradle
         run: |
-          chmod +x gradlew
+          chmod +x ./gradlew
           ./gradlew clean build
 
       - name: Install AWS CLI
         run: |
-          sudo apt update && sudo snap install aws-cli --classic 
+          sudo apt update && sudo apt install -y awscli 
 
       - name: Upload to S3
         run: |
@@ -52,8 +52,13 @@ jobs:
             # Install Java if not installed
             if ! command -v java &> /dev/null
             then
-                sudo apt update && sudo apt install openjdk-8-jdk -y
-                
+                sudo apt update && sudo apt install -y openjdk-8-jdk
+            fi
+
+            # Install AWS CLI if missing
+            if ! command -v aws &> /dev/null
+            then
+                sudo apt update && sudo apt install aws-cli --classic
             fi
 
             # Download JAR from S3
@@ -63,16 +68,16 @@ jobs:
             chmod +x /home/ubuntu/app.jar
 
             # Stop existing Java process (if running)
-            pkill -f 'java -jar' || true
+            pkill -f 'app.jar' || true
 
-            # Start the application
+            echo "🚀 Starting the application..."
             nohup java -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
 
             # Wait for app to start
             sleep 5
 
             # Check if application is running
-            if pgrep -f 'java -jar' > /dev/null
+            if pgrep -f 'app.jar' > /dev/null
             then
                 echo "✅ Application started successfully."
             else
