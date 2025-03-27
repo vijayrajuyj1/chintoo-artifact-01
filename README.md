@@ -1,22 +1,71 @@
-# Deploy Springboot application on ec2 instance
+# DevOps Assignment
 
-**steps**
+## Overview
+This repository contains Infrastructure as Code (IaC) and CI/CD pipelines for deploying a Spring Boot application built with Gradle. The goal is to automate infrastructure provisioning, application packaging, and deployment to AWS.
 
-1) Create Infrastructure using Terraform **[main.tf]**  in the code (vpc, subnets, internet gateway, subnenet association,  security groups , s3 , ec2 instances )
+## Project Structure
+```
+├── infra/                # Infrastructure as Code (Terraform, CloudFormation, etc.)
+├── ci-cd/                # CI/CD pipeline configuration (GitHub Actions, Jenkins, etc.)
+├── app/                  # Application source code
+├── scripts/              # Deployment scripts
+└── README.md             # Project documentation
+```
 
-2) Write .github/workflows/ant.yaml cicd fior automation in that we have some stages
+## Prerequisites
+Ensure you have the following installed:
+- Terraform (or preferred IaC tool)
+- AWS CLI configured with appropriate credentials
+- Jenkins/GitHub Actions/GitLab CI/CD setup
+- Docker (if containerizing the application)
+- Gradle (for building the application)
 
-   - github runners
-     
-   - install java 8
-     
-   - install awscli
-     
-   - copy that .*jar file to s3
-     
-   - Deploy to ec2
-     
-   - copy that .*jar file s3  to ec2 and run that .jarfile in background
-  
-     # note: All the stages are explinaed in the .github/workflows/ant.yaml
-     
+## Steps to Deploy
+
+### Step 1: Infrastructure Setup
+Use Terraform (or another IaC tool) to provision the required AWS infrastructure. Run:
+```sh
+cd infra/
+terraform init
+terraform apply -auto-approve
+```
+This will create the necessary VPC, subnets, security groups, EC2 instances, and S3 bucket.
+
+### Step 2: Build the Application
+Package the Spring Boot application using Gradle:
+```sh
+cd app/
+gradle build
+```
+This will generate a `.jar` file inside `build/libs/`.
+
+### Step 3: CI/CD Pipeline
+CI/CD is configured to:
+1. Build the application (`gradle build`)
+2. Upload the artifact to an S3 bucket
+3. Deploy the artifact to EC2 instances
+
+#### Using GitHub Actions:
+- The workflow is defined in `.github/workflows/deploy.yml`.
+- Push your changes to trigger the pipeline automatically.
+
+
+
+### Step 4: Deploy to EC2
+Deployment can be handled via a script:
+
+This will:
+- Download the artifact from S3
+- Deploy it on EC2 instances in both public and private subnets
+
+## Notes
+- If using Docker, the image is pushed to Docker Hub before deployment.
+- The EC2 instances have public IPs assigned.
+
+## Repository
+Find the source code and CI/CD pipelines at:
+[GitHub Repo](https://github.com/hvk2123/chintoo)
+
+## License
+This project is open-source and licensed under the MIT License.
+
