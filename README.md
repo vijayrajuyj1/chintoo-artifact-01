@@ -1,4 +1,4 @@
-# DevOps Assignment
+# DevOps Assignment Vijayaraju
 
 ## Overview
 This repository contains Infrastructure as Code (IaC) and CI/CD pipelines for deploying a Spring Boot application built with Gradle. The goal is to automate infrastructure provisioning, application packaging, and deployment to AWS.
